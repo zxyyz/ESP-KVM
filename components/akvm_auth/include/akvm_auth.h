@@ -29,6 +29,7 @@ typedef struct {
 } akvm_auth_device_challenge_t;
 
 typedef struct {
+    char id_token[AKVM_AUTH_TOKEN_MAX];
     char access_token[AKVM_AUTH_TOKEN_MAX];
     char refresh_token[AKVM_AUTH_TOKEN_MAX];
     uint64_t access_expires_at_unix;

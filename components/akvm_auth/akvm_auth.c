@@ -1,5 +1,6 @@
 #include "akvm_auth.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include "akvm_core.h"
 #include "akvm_net.h"
@@ -11,10 +12,15 @@ static akvm_auth_device_challenge_t s_challenge;
 static akvm_auth_token_set_t s_tokens;
 static const akvm_auth_transport_t *s_transport;
 
+static void secure_zero(void *ptr, size_t len)
+{
+    volatile unsigned char *p = (volatile unsigned char *)ptr;
+    while (len--) *p++ = 0;
+}
+
 static void zero_sensitive_state(void)
 {
-    volatile unsigned char *p = (volatile unsigned char *)&s_tokens;
-    for (size_t i = 0; i < sizeof(s_tokens); ++i) p[i] = 0;
+    secure_zero(&s_tokens, sizeof(s_tokens));
     memset(&s_challenge, 0, sizeof(s_challenge));
 }
 
@@ -62,19 +68,27 @@ esp_err_t akvm_auth_poll_device_login(bool *still_pending)
     if (s_state != AKVM_AUTH_DEVICE_PENDING) return ESP_ERR_INVALID_STATE;
     if (!s_transport) return ESP_ERR_NOT_SUPPORTED;
 
+    akvm_auth_token_set_t *next = calloc(1, sizeof(*next));
+    if (!next) return ESP_ERR_NO_MEM;
+
     bool pending = false;
-    akvm_auth_token_set_t next = {0};
-    esp_err_t err = s_transport->poll_device_code(&s_challenge, &next, &pending);
+    esp_err_t err = s_transport->poll_device_code(&s_challenge, next, &pending);
     if (pending) {
+        secure_zero(next, sizeof(*next));
+        free(next);
         *still_pending = true;
         return ESP_OK;
     }
     if (err != ESP_OK) {
+        secure_zero(next, sizeof(*next));
+        free(next);
         s_state = AKVM_AUTH_ERROR;
         return err;
     }
 
-    s_tokens = next;
+    s_tokens = *next;
+    secure_zero(next, sizeof(*next));
+    free(next);
     s_state = AKVM_AUTH_READY;
     akvm_core_set_service_ready(AKVM_SERVICE_AUTH, true);
     memset(&s_challenge, 0, sizeof(s_challenge));

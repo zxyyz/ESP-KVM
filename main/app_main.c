@@ -6,6 +6,7 @@
 #include "akvm_ai.h"
 #include "akvm_auth.h"
 #include "akvm_board.h"
+#include "akvm_codex_auth.h"
 #include "akvm_core.h"
 #include "akvm_hid.h"
 #include "akvm_net.h"
@@ -39,6 +40,9 @@ void app_main(void)
     ESP_ERROR_CHECK(akvm_video_init());
     ESP_ERROR_CHECK(akvm_tools_init());
     ESP_ERROR_CHECK(akvm_auth_init());
+#if CONFIG_AKVM_ENABLE_AI
+    ESP_ERROR_CHECK(akvm_codex_auth_init());
+#endif
     ESP_ERROR_CHECK(akvm_ai_init());
 
     akvm_core_set_boot_complete();
