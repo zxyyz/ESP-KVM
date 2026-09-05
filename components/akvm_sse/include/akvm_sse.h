@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "sdkconfig.h"
 #include "esp_err.h"
 
 #ifdef __cplusplus
