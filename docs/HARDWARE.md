@@ -6,6 +6,9 @@
 - Wireless coprocessor: ESP32-C5.
 - Intended C5 role: Wi-Fi uplink through ESP-Hosted, preferably SDIO.
 - Target function: HDMI-in IP-KVM with USB keyboard/mouse device output.
+- Additional storage: one **256 MB flash device** dedicated to bulk data.
+
+The 256 MB device is currently planned as **secondary storage**, not as the P4 boot flash. ESP32-P4's documented main-flash path is limited to 64 MB, so firmware/OTA/security storage stays on the normal main flash while the large device is treated as a separate bulk backend.
 
 ## Board facts still required
 
@@ -13,19 +16,45 @@ Before hardware drivers are bound, record these facts here:
 
 - exact board vendor and model/revision;
 - ESP32-P4 silicon revision (`v1.x` vs `v3.x` matters for video/H.264 behavior);
-- flash size;
+- main boot flash size and part number;
 - PSRAM type and size;
+- **256 MB bulk-flash manufacturer/part number**;
+- bulk flash type: NOR vs NAND;
+- bulk flash interface/bus, chip-select and exact pins;
+- bulk flash erase/program geometry and address mode;
 - P4<->C5 transport (SDIO/SPI) and exact pins;
 - C5 boot/enable/reset wiring;
 - USB-OTG connector wiring to the target PC;
 - whether USB-Serial-JTAG shares or conflicts with the intended device port;
 - available MIPI-CSI lane count/pins;
 - HDMI bridge part and oscillator/reference clock;
-- microSD wiring;
+- microSD wiring, if still present after adding bulk flash;
 - Ethernet PHY, if present;
 - ATX power/reset/header interface, if present.
 
 Until these are known, board-specific code remains disabled by Kconfig.
+
+## Flash/storage topology
+
+Recommended topology:
+
+```text
+ESP32-P4
+  |
+  +-- main flash (<= 64 MB documented boot path)
+  |     bootloader / partition table
+  |     OTA A/B
+  |     encrypted NVS / secrets
+  |     recovery metadata
+  |
+  +-- secondary 256 MB flash
+        virtual media
+        update staging
+        bounded diagnostics/audit
+        optional cached static assets
+```
+
+The secondary flash is not assumed to support execution, normal boot partitions, mmap, or ESP32 hardware Flash Encryption. OAuth/VPN/device private keys must not be placed there in plaintext. See `docs/STORAGE.md`.
 
 ## HDMI input
 
@@ -82,7 +111,7 @@ Initial interfaces:
 
 Later:
 
-- read-only MSC virtual media.
+- read-only MSC virtual media backed by approved objects on the 256 MB bulk flash.
 
 USB HID must work independently from networking and AI.
 
@@ -107,16 +136,21 @@ Budget for simultaneous peaks from:
 - C5 5 GHz transmit;
 - HDMI bridge;
 - PSRAM;
-- SD card;
+- main flash;
+- 256 MB bulk flash during erase/program;
+- SD card if retained;
 - USB device PHY;
 - Ethernet PHY if fitted.
 
-Measure 5 V rail droop during Wi-Fi TX + video encode before treating unexplained CSI/SD failures as software bugs.
+Measure 5 V rail droop during Wi-Fi TX + video encode + bulk-flash erase/program before treating unexplained CSI/storage failures as software bugs.
 
 ## Hardware acceptance tests
 
 A board profile is considered supported only after:
 
+- exact main/bulk flash parts and geometry are detected and recorded;
+- full-device development read/write/erase test for the 256 MB flash;
+- power-cut recovery during bulk-storage metadata update;
 - 12 h HDMI capture soak;
 - repeated HDMI unplug/replug;
 - cold boot while target already outputs HDMI;
@@ -124,5 +158,6 @@ A board profile is considered supported only after:
 - 10k keyboard and mouse report stress test;
 - Wi-Fi reconnect while video active;
 - VPN reconnect while video active;
+- bulk-flash erase/program while measuring HID/video p99 latency;
 - watchdog recovery from bridge/C5 failure;
 - thermal measurements in enclosure.
