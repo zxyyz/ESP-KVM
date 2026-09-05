@@ -63,6 +63,24 @@ Do **not** assume this flash can:
 
 If sensitive bulk content is required, use application-layer authenticated encryption with a key rooted in protected main-flash/eFuse state, or do not persist the content.
 
+## Capacity boundary
+
+A 256 MB device is useful for KVM support media, but it is **not large enough to be the only full-size OS ISO store**. The firmware should therefore optimize the on-board media feature for:
+
+- UEFI shell and firmware utilities;
+- iPXE/network-boot images;
+- small rescue/recovery environments;
+- bootstrappers that hand off installation to the network;
+- compact vendor diagnostics.
+
+If multi-gigabyte Windows/Linux installer ISO support becomes a product requirement, keep one of these extension paths available:
+
+1. microSD or USB mass storage with multi-GB capacity;
+2. a larger secondary flash/eMMC device;
+3. a separately designed remote block backend with local caching and strict timeout/retry semantics.
+
+Do not promise general full-ISO virtual media solely from the 256 MB flash.
+
 ## Proposed logical layout
 
 The 256 MB device should not use the ESP-IDF boot partition table. It gets its own storage metadata.
@@ -73,7 +91,7 @@ Initial logical budget:
 |---|---:|---|
 | superblock A/B | 2 x 64 KiB | redundant format/version/generation metadata |
 | object index / journal | 4 MiB | bounded metadata, wear-aware updates |
-| virtual media | 192 MiB | ISO/IMG-style objects |
+| virtual media | 192 MiB | compact ISO/IMG/rescue/bootstrap objects |
 | update staging | 32 MiB | verified temporary download/staging |
 | diagnostics/audit | 16 MiB | bounded ring; redacted only |
 | reserve | remainder | bad-block/alignment/future use |
@@ -92,7 +110,7 @@ Candidates:
 - FATFS if host tooling/interoperability matters;
 - custom append/object store for large immutable virtual-media payloads.
 
-A hybrid design is attractive: small redundant metadata + large extent-based immutable objects, avoiding frequent filesystem rewrites for ISO-sized files.
+A hybrid design is attractive: small redundant metadata + large extent-based immutable objects, avoiding frequent filesystem rewrites for media-sized files.
 
 ### If SPI NAND
 
@@ -100,7 +118,7 @@ Use a NAND-aware layer/filesystem with bad-block management and ECC expectations
 
 ## Virtual-media design
 
-The 256 MB flash makes virtual media a first-class feature.
+The 256 MB flash makes compact virtual media a first-class feature.
 
 Recommended behavior:
 
