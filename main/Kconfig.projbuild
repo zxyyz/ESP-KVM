@@ -1,0 +1,74 @@
+menu "P4+C5 AI KVM"
+
+config AKVM_ENABLE_AI
+    bool "Build AI/Codex integration"
+    default y
+
+config AKVM_ENABLE_HID
+    bool "Build USB HID integration"
+    default n
+    help
+        Keep disabled until the target board USB-OTG wiring is confirmed.
+
+config AKVM_ENABLE_VIDEO
+    bool "Build HDMI capture/video integration"
+    default n
+    help
+        Keep disabled until the HDMI-to-CSI bridge and pin mapping are confirmed.
+
+config AKVM_ENABLE_WIREGUARD
+    bool "Build WireGuard integration"
+    default n
+    help
+        This switch only enables the product feature. A concrete wireguard_lwip
+        dependency is intentionally not pinned in the architecture scaffold.
+
+choice AKVM_NETWORK_BACKEND
+    prompt "Network uplink"
+    default AKVM_NETWORK_STUB
+
+config AKVM_NETWORK_STUB
+    bool "Stub / offline"
+config AKVM_NETWORK_ESP_HOSTED_SDIO
+    bool "ESP32-C5 via ESP-Hosted SDIO"
+config AKVM_NETWORK_ESP_HOSTED_SPI
+    bool "ESP32-C5 via ESP-Hosted SPI"
+config AKVM_NETWORK_ETHERNET
+    bool "ESP32-P4 Ethernet"
+endchoice
+
+choice AKVM_HDMI_BRIDGE
+    prompt "HDMI-to-CSI bridge"
+    default AKVM_HDMI_BRIDGE_NONE
+
+config AKVM_HDMI_BRIDGE_NONE
+    bool "None / not bound yet"
+config AKVM_HDMI_BRIDGE_TC358743
+    bool "TC358743"
+config AKVM_HDMI_BRIDGE_LT6911
+    bool "LT6911 family"
+endchoice
+
+choice AKVM_AI_POLICY_DEFAULT
+    prompt "Default AI input policy"
+    default AKVM_AI_POLICY_OBSERVE
+
+config AKVM_AI_POLICY_OBSERVE
+    bool "Observe only"
+config AKVM_AI_POLICY_ASSIST
+    bool "Assist with approval"
+config AKVM_AI_POLICY_AUTONOMOUS
+    bool "Autonomous bounded workflows"
+endchoice
+
+config AKVM_MAX_TOOL_PAYLOAD
+    int "Maximum AI tool payload bytes"
+    range 1024 65536
+    default 16384
+
+config AKVM_MAX_SCREEN_TEXT
+    int "Maximum extracted screen text bytes"
+    range 1024 32768
+    default 8192
+
+endmenu
