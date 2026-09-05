@@ -9,6 +9,7 @@
 #include "akvm_core.h"
 #include "akvm_hid.h"
 #include "akvm_net.h"
+#include "akvm_storage.h"
 #include "akvm_tools.h"
 #include "akvm_video.h"
 
@@ -29,6 +30,7 @@ void app_main(void)
     ESP_ERROR_CHECK(init_nvs());
     ESP_ERROR_CHECK(akvm_core_init());
     ESP_ERROR_CHECK(akvm_board_init());
+    ESP_ERROR_CHECK(akvm_storage_init());
 
     /* Each service owns its failure state. Missing optional hardware must not
      * prevent the management plane from booting. */
