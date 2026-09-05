@@ -26,6 +26,7 @@
 #define CODEX_MODEL_MAX 128
 #define CODEX_ACCOUNT_ID_MAX 192
 #define CODEX_HTTP_TIMEOUT_MS 300000
+#define CODEX_ORIGINATOR "p4_c5_ai_kvm"
 #define CODEX_USER_AGENT "p4-c5-ai-kvm/0.1 codex-compat/" AKVM_CODEX_COMPAT_CLIENT_VERSION
 
 static const char *TAG = "akvm_codex_model";
@@ -152,6 +153,7 @@ static esp_err_t set_auth_headers(esp_http_client_handle_t client,
     free(bearer);
     if (err == ESP_OK) err = esp_http_client_set_header(client, "ChatGPT-Account-ID", claims->account_id);
     if (err == ESP_OK && claims->fedramp) err = esp_http_client_set_header(client, "X-OpenAI-Fedramp", "true");
+    if (err == ESP_OK) err = esp_http_client_set_header(client, "originator", CODEX_ORIGINATOR);
     if (err == ESP_OK) err = esp_http_client_set_header(client, "User-Agent", CODEX_USER_AGENT);
     return err;
 }
