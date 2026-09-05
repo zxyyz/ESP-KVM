@@ -95,6 +95,28 @@ esp_err_t akvm_auth_poll_device_login(bool *still_pending)
     return ESP_OK;
 }
 
+esp_err_t akvm_auth_refresh(void)
+{
+    if (s_state != AKVM_AUTH_READY || !s_transport) return ESP_ERR_INVALID_STATE;
+
+    akvm_auth_token_set_t *next = calloc(1, sizeof(*next));
+    if (!next) return ESP_ERR_NO_MEM;
+
+    esp_err_t err = s_transport->refresh_tokens(&s_tokens, next);
+    if (err == ESP_OK) {
+        secure_zero(&s_tokens, sizeof(s_tokens));
+        s_tokens = *next;
+        akvm_core_set_service_ready(AKVM_SERVICE_AUTH, true);
+    } else if (err == ESP_ERR_INVALID_STATE || err == ESP_ERR_INVALID_RESPONSE) {
+        s_state = AKVM_AUTH_ERROR;
+        akvm_core_set_service_ready(AKVM_SERVICE_AUTH, false);
+    }
+
+    secure_zero(next, sizeof(*next));
+    free(next);
+    return err;
+}
+
 esp_err_t akvm_auth_sign_out(void)
 {
     zero_sensitive_state();

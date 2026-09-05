@@ -11,7 +11,7 @@ extern "C" {
 
 #define AKVM_SSE_EVENT_NAME_MAX 64
 #define AKVM_SSE_FIELD_NAME_MAX 16
-#define AKVM_SSE_DATA_MAX CONFIG_AKVM_MAX_TOOL_PAYLOAD
+#define AKVM_SSE_DATA_MAX CONFIG_AKVM_SSE_EVENT_MAX
 
 typedef struct {
     const char *event;

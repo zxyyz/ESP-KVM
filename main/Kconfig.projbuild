@@ -66,9 +66,32 @@ config AKVM_MAX_TOOL_PAYLOAD
     range 1024 65536
     default 16384
 
+config AKVM_SSE_EVENT_MAX
+    int "Maximum single SSE event bytes"
+    range 4096 65536
+    default 32768
+    help
+        Upper bound for one streaming Codex event. Allocated only while a stream
+        parser instance exists, not as a permanent per-task stack buffer.
+
 config AKVM_MAX_SCREEN_TEXT
     int "Maximum extracted screen text bytes"
     range 1024 32768
     default 8192
+
+config AKVM_CODEX_MODEL_CATALOG_MAX
+    int "Maximum Codex model catalog response bytes"
+    range 16384 262144
+    default 65536
+    help
+        If the account model catalog exceeds this bound, configure a model
+        override rather than growing memory without measurement.
+
+config AKVM_CODEX_MODEL_OVERRIDE
+    string "Codex model override"
+    default ""
+    help
+        Leave empty to select the highest-priority supported model from the
+        account's /models catalog. Set a slug only for compatibility/debugging.
 
 endmenu

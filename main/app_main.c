@@ -7,6 +7,7 @@
 #include "akvm_auth.h"
 #include "akvm_board.h"
 #include "akvm_codex_auth.h"
+#include "akvm_codex_model.h"
 #include "akvm_core.h"
 #include "akvm_hid.h"
 #include "akvm_net.h"
@@ -44,6 +45,9 @@ void app_main(void)
     ESP_ERROR_CHECK(akvm_codex_auth_init());
 #endif
     ESP_ERROR_CHECK(akvm_ai_init());
+#if CONFIG_AKVM_ENABLE_AI
+    ESP_ERROR_CHECK(akvm_codex_model_init());
+#endif
 
     akvm_core_set_boot_complete();
     ESP_LOGI(TAG, "P4+C5 AI KVM architecture scaffold started");

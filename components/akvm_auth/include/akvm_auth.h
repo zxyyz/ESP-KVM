@@ -48,6 +48,7 @@ esp_err_t akvm_auth_init(void);
 esp_err_t akvm_auth_bind_transport(const akvm_auth_transport_t *transport);
 esp_err_t akvm_auth_begin_device_login(akvm_auth_device_challenge_t *out);
 esp_err_t akvm_auth_poll_device_login(bool *still_pending);
+esp_err_t akvm_auth_refresh(void);
 esp_err_t akvm_auth_sign_out(void);
 akvm_auth_state_t akvm_auth_state(void);
 const akvm_auth_token_set_t *akvm_auth_tokens(void);
